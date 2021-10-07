@@ -5,12 +5,12 @@ import (
 	"sync"
 )
 
-type octree struct {
-	root *node
+type Octree struct {
+	root *Node
 }
 
 // Insertion
-func (tree *octree) Insert(point *vector3) {
+func (tree *Octree) Insert(point *Vector3) {
 	newHome := FindFreeSpace(tree.root, point)
 	if newHome == nil {
 		fmt.Println("point", point, "was already in the tree")
@@ -22,7 +22,7 @@ func (tree *octree) Insert(point *vector3) {
 	//fmt.Println("point:" , point, " went to ", newHome.uid)
 }
 
-func FindFreeSpace(currentNode *node, point *vector3) *node {
+func FindFreeSpace(currentNode *Node, point *Vector3) *Node {
 	//If this is true...
 	//... Gentleman, we got him!
 	if currentNode.point == nil && currentNode.children[0] == nil {
@@ -30,7 +30,7 @@ func FindFreeSpace(currentNode *node, point *vector3) *node {
 		return currentNode
 	}
 
-	//Test If point is already inside the octree
+	//Test If point is already inside the Octree
 	if currentNode.point != nil {
 		if *currentNode.point == *point {
 			return nil
@@ -61,8 +61,8 @@ func FindFreeSpace(currentNode *node, point *vector3) *node {
 }
 
 // Point already in tree query
-func PointAlreadyInTree(currentNode *node, point *vector3) bool {
-	//Test If point is already inside the octree
+func PointAlreadyInTree(currentNode *Node, point *Vector3) bool {
+	//Test If point is already inside the Octree
 	if currentNode.point != nil {
 		//... Gentleman, we got him!
 		if *currentNode.point == *point {
@@ -88,16 +88,16 @@ func PointAlreadyInTree(currentNode *node, point *vector3) bool {
 
 // Spaces Query
 type returnObjPoints struct {
-	resultSlice []vector3
+	resultSlice []Vector3
 	lock        sync.Mutex
 }
 
-func GetPoints(currentNode *node) []vector3 {
-	//var resultSlice []vector3
+func GetPoints(currentNode *Node) []Vector3 {
+	//var resultSlice []Vector3
 	wg := sync.WaitGroup{}
 
 	ownChan := returnObjPoints{
-		resultSlice: []vector3{},
+		resultSlice: []Vector3{},
 		lock:        sync.Mutex{},
 	}
 
@@ -108,7 +108,7 @@ func GetPoints(currentNode *node) []vector3 {
 	return ownChan.resultSlice
 }
 
-func GetPointsTask(currentNode *node, ownchan *returnObjPoints, parentWg *sync.WaitGroup) {
+func GetPointsTask(currentNode *Node, ownchan *returnObjPoints, parentWg *sync.WaitGroup) {
 	//var returnSlice []string
 	defer parentWg.Done()
 	//defer println(currentNode.uid, "done")
@@ -133,7 +133,7 @@ type returnObjFreeSpaces struct {
 	lock        sync.Mutex
 }
 
-func GetFreeSpaces(currentNode *node) []string {
+func GetFreeSpaces(currentNode *Node) []string {
 	//var resultSlice []string
 	wg := sync.WaitGroup{}
 
@@ -149,7 +149,7 @@ func GetFreeSpaces(currentNode *node) []string {
 	return ownChan.resultSlice
 }
 
-func GetFreeSpacesTask(currentNode *node, ownChan *returnObjFreeSpaces, parentWg *sync.WaitGroup) {
+func GetFreeSpacesTask(currentNode *Node, ownChan *returnObjFreeSpaces, parentWg *sync.WaitGroup) {
 	//var returnSlice []string
 	defer parentWg.Done()
 	//defer println(currentNode.uid, "done")
@@ -169,17 +169,17 @@ func GetFreeSpacesTask(currentNode *node, ownChan *returnObjFreeSpaces, parentWg
 }
 
 // Neighbor Query (All, not just directly facing) ToDo: MakeOneOnlyForDirectlay Facing
-func GetNeighbors(currentNode *node, rootNode *node, hasToBeFree bool) []string {
-	checkPoints := []vector3{}
+func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool) []string {
+	checkPoints := []Vector3{}
 
-	left := currentNode.center.Add(vector3{
+	left := currentNode.center.Add(Vector3{
 		x: -currentNode.size*0.5 - 0.0001,
 		y: 0,
 		z: 0,
 	})
 	checkPoints = append(checkPoints, left)
 
-	right := currentNode.center.Add(vector3{
+	right := currentNode.center.Add(Vector3{
 		x: currentNode.size*0.5 + 0.0001,
 		y: 0,
 		z: 0,
@@ -187,7 +187,7 @@ func GetNeighbors(currentNode *node, rootNode *node, hasToBeFree bool) []string 
 
 	checkPoints = append(checkPoints, right)
 
-	bottom := currentNode.center.Add(vector3{
+	bottom := currentNode.center.Add(Vector3{
 		x: 0,
 		y: -currentNode.size*0.5 - 0.0001,
 		z: 0,
@@ -195,7 +195,7 @@ func GetNeighbors(currentNode *node, rootNode *node, hasToBeFree bool) []string 
 
 	checkPoints = append(checkPoints, bottom)
 
-	top := currentNode.center.Add(vector3{
+	top := currentNode.center.Add(Vector3{
 		x: 0,
 		y: currentNode.size*0.5 + 0.0001,
 		z: 0,
@@ -203,7 +203,7 @@ func GetNeighbors(currentNode *node, rootNode *node, hasToBeFree bool) []string 
 
 	checkPoints = append(checkPoints, top)
 
-	back := currentNode.center.Add(vector3{
+	back := currentNode.center.Add(Vector3{
 		x: 0,
 		y: 0,
 		z: -currentNode.size*0.5 - 0.0001,
@@ -211,7 +211,7 @@ func GetNeighbors(currentNode *node, rootNode *node, hasToBeFree bool) []string 
 
 	checkPoints = append(checkPoints, back)
 
-	front := currentNode.center.Add(vector3{
+	front := currentNode.center.Add(Vector3{
 		x: 0,
 		y: 0,
 		z: currentNode.size*0.5 + 0.0001,
@@ -234,7 +234,7 @@ func GetNeighbors(currentNode *node, rootNode *node, hasToBeFree bool) []string 
 
 }
 
-func FindFittingChild(currentNode *node, point *vector3, depth int) *node {
+func FindFittingChild(currentNode *Node, point *Vector3, depth int) *Node {
 	if len(currentNode.uid) == depth {
 		return currentNode
 	}
@@ -253,13 +253,13 @@ func FindFittingChild(currentNode *node, point *vector3, depth int) *node {
 	return nil
 }
 
-func GetChildrenRecursively(currentNode *node, hasToBeFree bool) []string {
+func GetChildrenRecursively(currentNode *Node, hasToBeFree bool) []string {
 	var returnSlice []string
 	GetChildrenRecursivelyTask(currentNode, &returnSlice, hasToBeFree)
 	return returnSlice
 }
 
-func GetChildrenRecursivelyTask(currentNode *node, returnSlice *[]string, hasToBeFree bool) {
+func GetChildrenRecursivelyTask(currentNode *Node, returnSlice *[]string, hasToBeFree bool) {
 
 	if currentNode.children[0] != nil {
 		for i := 0; i < 8; i++ {
@@ -277,7 +277,7 @@ func GetChildrenRecursivelyTask(currentNode *node, returnSlice *[]string, hasToB
 }
 
 // GetNodeWithUid
-func (tree *octree) GetNodeWithUid(uid string) *node {
+func (tree *Octree) GetNodeWithUid(uid string) *Node {
 	currentNode := tree.root
 	for true {
 		if currentNode.uid == uid {
