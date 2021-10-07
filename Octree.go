@@ -6,53 +6,53 @@ import (
 )
 
 type Octree struct {
-	root *Node
+	Root *Node
 }
 
 // Insertion
 func (tree *Octree) Insert(point *Vector3) {
-	newHome := FindFreeSpace(tree.root, point)
+	newHome := FindFreeSpace(tree.Root, point)
 	if newHome == nil {
-		fmt.Println("point", point, "was already in the tree")
+		fmt.Println("Point", point, "was already in the tree")
 		return
 	}
 
-	newHome.point = point
+	newHome.Point = point
 
-	//fmt.Println("point:" , point, " went to ", newHome.uid)
+	//fmt.Println("Point:" , Point, " went to ", newHome.Uid)
 }
 
 func FindFreeSpace(currentNode *Node, point *Vector3) *Node {
 	//If this is true...
 	//... Gentleman, we got him!
-	if currentNode.point == nil && currentNode.children[0] == nil {
-		//if currentNode.point == nil && currentNode.maxDepth == 0 {
+	if currentNode.Point == nil && currentNode.Children[0] == nil {
+		//if currentNode.Point == nil && currentNode.MaxDepth == 0 {
 		return currentNode
 	}
 
-	//Test If point is already inside the Octree
-	if currentNode.point != nil {
-		if *currentNode.point == *point {
+	//Test If Point is already inside the Octree
+	if currentNode.Point != nil {
+		if *currentNode.Point == *point {
 			return nil
 		}
 	}
 
 	//if you got til here, then we need to go further down
-	//But if we don't have children then we need to make em first
-	if currentNode.children[0] == nil {
-		// Since points are only allowed in child nodes, we will have to trickle down the point
+	//But if we don't have Children then we need to make em first
+	if currentNode.Children[0] == nil {
+		// Since points are only allowed in child nodes, we will have to trickle down the Point
 		currentNode.MakeChildren()
-		v := currentNode.point
-		currentNode.point = nil
+		v := currentNode.Point
+		currentNode.Point = nil
 		newHome := FindFreeSpace(currentNode, v)
-		newHome.point = v
-		//fmt.Println("point:" , v, " got moved from ", currentNode.uid, " to ", newHome.uid)
+		newHome.Point = v
+		//fmt.Println("Point:" , v, " got moved from ", currentNode.Uid, " to ", newHome.Uid)
 	}
 
-	//Look for candidate in children
+	//Look for candidate in Children
 	for i := 0; i < 8; i++ {
-		if currentNode.children[i].PointFits(point) {
-			return FindFreeSpace(currentNode.children[i], point)
+		if currentNode.Children[i].PointFits(point) {
+			return FindFreeSpace(currentNode.Children[i], point)
 		}
 	}
 
@@ -62,24 +62,24 @@ func FindFreeSpace(currentNode *Node, point *Vector3) *Node {
 
 // Point already in tree query
 func PointAlreadyInTree(currentNode *Node, point *Vector3) bool {
-	//Test If point is already inside the Octree
-	if currentNode.point != nil {
+	//Test If Point is already inside the Octree
+	if currentNode.Point != nil {
 		//... Gentleman, we got him!
-		if *currentNode.point == *point {
+		if *currentNode.Point == *point {
 			return true
 		}
 	}
 
-	// Not in goal, but no more children?
+	// Not in goal, but no more Children?
 	// Then your princess is in another castle
-	if currentNode.children[0] == nil {
+	if currentNode.Children[0] == nil {
 		return false
 	}
 
-	//Look for candidate in children
+	//Look for candidate in Children
 	for i := 0; i < 8; i++ {
-		if currentNode.children[i].PointFits(point) {
-			return PointAlreadyInTree(currentNode.children[i], point)
+		if currentNode.Children[i].PointFits(point) {
+			return PointAlreadyInTree(currentNode.Children[i], point)
 		}
 	}
 
@@ -111,17 +111,17 @@ func GetPoints(currentNode *Node) []Vector3 {
 func GetPointsTask(currentNode *Node, ownchan *returnObjPoints, parentWg *sync.WaitGroup) {
 	//var returnSlice []string
 	defer parentWg.Done()
-	//defer println(currentNode.uid, "done")
-	//fmt.Println("uid", currentNode.uid, "wg: ", parentWg)
-	if currentNode.children[0] != nil {
+	//defer println(currentNode.Uid, "done")
+	//fmt.Println("Uid", currentNode.Uid, "wg: ", parentWg)
+	if currentNode.Children[0] != nil {
 		parentWg.Add(8)
-		for _, child := range currentNode.children {
+		for _, child := range currentNode.Children {
 			go GetPointsTask(child, ownchan, parentWg)
 		}
 
-	} else if currentNode.point != nil {
+	} else if currentNode.Point != nil {
 		ownchan.lock.Lock()
-		ownchan.resultSlice = append(ownchan.resultSlice, *currentNode.point)
+		ownchan.resultSlice = append(ownchan.resultSlice, *currentNode.Point)
 		ownchan.lock.Unlock()
 	}
 
@@ -152,17 +152,17 @@ func GetFreeSpaces(currentNode *Node) []string {
 func GetFreeSpacesTask(currentNode *Node, ownChan *returnObjFreeSpaces, parentWg *sync.WaitGroup) {
 	//var returnSlice []string
 	defer parentWg.Done()
-	//defer println(currentNode.uid, "done")
-	//fmt.Println("uid", currentNode.uid, "wg: ", parentWg)
-	if currentNode.children[0] != nil {
+	//defer println(currentNode.Uid, "done")
+	//fmt.Println("Uid", currentNode.Uid, "wg: ", parentWg)
+	if currentNode.Children[0] != nil {
 		parentWg.Add(8)
-		for _, child := range currentNode.children {
+		for _, child := range currentNode.Children {
 			go GetFreeSpacesTask(child, ownChan, parentWg)
 		}
 
-	} else if currentNode.point == nil {
+	} else if currentNode.Point == nil {
 		ownChan.lock.Lock()
-		ownChan.resultSlice = append(ownChan.resultSlice, currentNode.uid)
+		ownChan.resultSlice = append(ownChan.resultSlice, currentNode.Uid)
 		ownChan.lock.Unlock()
 	}
 
@@ -172,49 +172,49 @@ func GetFreeSpacesTask(currentNode *Node, ownChan *returnObjFreeSpaces, parentWg
 func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool) []string {
 	checkPoints := []Vector3{}
 
-	left := currentNode.center.Add(Vector3{
-		x: -currentNode.size*0.5 - 0.0001,
-		y: 0,
-		z: 0,
+	left := currentNode.Center.Add(Vector3{
+		X: -currentNode.Size*0.5 - 0.0001,
+		Y: 0,
+		Z: 0,
 	})
 	checkPoints = append(checkPoints, left)
 
-	right := currentNode.center.Add(Vector3{
-		x: currentNode.size*0.5 + 0.0001,
-		y: 0,
-		z: 0,
+	right := currentNode.Center.Add(Vector3{
+		X: currentNode.Size*0.5 + 0.0001,
+		Y: 0,
+		Z: 0,
 	})
 
 	checkPoints = append(checkPoints, right)
 
-	bottom := currentNode.center.Add(Vector3{
-		x: 0,
-		y: -currentNode.size*0.5 - 0.0001,
-		z: 0,
+	bottom := currentNode.Center.Add(Vector3{
+		X: 0,
+		Y: -currentNode.Size*0.5 - 0.0001,
+		Z: 0,
 	})
 
 	checkPoints = append(checkPoints, bottom)
 
-	top := currentNode.center.Add(Vector3{
-		x: 0,
-		y: currentNode.size*0.5 + 0.0001,
-		z: 0,
+	top := currentNode.Center.Add(Vector3{
+		X: 0,
+		Y: currentNode.Size*0.5 + 0.0001,
+		Z: 0,
 	})
 
 	checkPoints = append(checkPoints, top)
 
-	back := currentNode.center.Add(Vector3{
-		x: 0,
-		y: 0,
-		z: -currentNode.size*0.5 - 0.0001,
+	back := currentNode.Center.Add(Vector3{
+		X: 0,
+		Y: 0,
+		Z: -currentNode.Size*0.5 - 0.0001,
 	})
 
 	checkPoints = append(checkPoints, back)
 
-	front := currentNode.center.Add(Vector3{
-		x: 0,
-		y: 0,
-		z: currentNode.size*0.5 + 0.0001,
+	front := currentNode.Center.Add(Vector3{
+		X: 0,
+		Y: 0,
+		Z: currentNode.Size*0.5 + 0.0001,
 	})
 
 	checkPoints = append(checkPoints, front)
@@ -223,7 +223,7 @@ func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool) []string 
 
 	for _, point := range checkPoints {
 		if rootNode.PointFits(&point) {
-			n := FindFittingChild(rootNode, &point, len(currentNode.uid))
+			n := FindFittingChild(rootNode, &point, len(currentNode.Uid))
 			addition := GetChildrenRecursively(n, hasToBeFree)
 			for _, val := range addition {
 				returnSlice = append(returnSlice, val)
@@ -235,15 +235,15 @@ func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool) []string 
 }
 
 func FindFittingChild(currentNode *Node, point *Vector3, depth int) *Node {
-	if len(currentNode.uid) == depth {
+	if len(currentNode.Uid) == depth {
 		return currentNode
 	}
 
-	if currentNode.children[0] == nil {
+	if currentNode.Children[0] == nil {
 		return currentNode
 	}
 
-	for _, child := range currentNode.children {
+	for _, child := range currentNode.Children {
 		if child.PointFits(point) {
 			return FindFittingChild(child, point, depth)
 		}
@@ -261,31 +261,31 @@ func GetChildrenRecursively(currentNode *Node, hasToBeFree bool) []string {
 
 func GetChildrenRecursivelyTask(currentNode *Node, returnSlice *[]string, hasToBeFree bool) {
 
-	if currentNode.children[0] != nil {
+	if currentNode.Children[0] != nil {
 		for i := 0; i < 8; i++ {
-			GetChildrenRecursivelyTask(currentNode.children[i], returnSlice, hasToBeFree)
+			GetChildrenRecursivelyTask(currentNode.Children[i], returnSlice, hasToBeFree)
 		}
 	} else {
 		if hasToBeFree {
-			if currentNode.point != nil {
+			if currentNode.Point != nil {
 				return
 			}
 		}
 
-		*returnSlice = append(*returnSlice, currentNode.uid)
+		*returnSlice = append(*returnSlice, currentNode.Uid)
 	}
 }
 
 // GetNodeWithUid
 func (tree *Octree) GetNodeWithUid(uid string) *Node {
-	currentNode := tree.root
+	currentNode := tree.Root
 	for true {
-		if currentNode.uid == uid {
+		if currentNode.Uid == uid {
 			return currentNode
 		}
-		if len(currentNode.uid) < len(uid) {
-			for _, child := range currentNode.children {
-				if child.uid == uid {
+		if len(currentNode.Uid) < len(uid) {
+			for _, child := range currentNode.Children {
+				if child.Uid == uid {
 					currentNode = child
 					break
 				}

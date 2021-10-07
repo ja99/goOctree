@@ -6,22 +6,22 @@ import (
 )
 
 type Node struct {
-	uid    string
-	center Vector3
-	size   float32
-	// [0] = -x -y -z //left low back
-	// [1] = -x -y +z //left low front
-	// [2] = -x +y -z //left high back
-	// [3] = -x +y +z //left high front
-	// [4] = +x -y -z //right low back
-	// [5] = +x -y +z //right low front
-	// [6] = +x +y -z //right high back
-	// [7] = +x +y +z //right high front
-	children [8]*Node
-	point    *Vector3
-	maxDepth uint8
-	parent   *Node
-	lock     sync.Mutex
+	Uid    string
+	Center Vector3
+	Size   float32
+	// [0] = -X -Y -Z //left low back
+	// [1] = -X -Y +Z //left low front
+	// [2] = -X +Y -Z //left high back
+	// [3] = -X +Y +Z //left high front
+	// [4] = +X -Y -Z //right low back
+	// [5] = +X -Y +Z //right low front
+	// [6] = +X +Y -Z //right high back
+	// [7] = +X +Y +Z //right high front
+	Children [8]*Node
+	Point    *Vector3
+	MaxDepth uint8
+	Parent   *Node
+	Lock     sync.Mutex
 }
 
 func (n *Node) MakeChildren() {
@@ -30,38 +30,38 @@ func (n *Node) MakeChildren() {
 		for y := float32(-1); y <= 1; y += 2 {
 			for z := float32(-1); z <= 1; z += 2 {
 				nudge := Vector3{
-					x: n.size * 0.25 * x,
-					y: n.size * 0.25 * y,
-					z: n.size * 0.25 * z,
+					X: n.Size * 0.25 * x,
+					Y: n.Size * 0.25 * y,
+					Z: n.Size * 0.25 * z,
 				}
-				newCenter := n.center.Add(nudge)
+				newCenter := n.Center.Add(nudge)
 
 				newNode := Node{
-					uid:      n.uid + strconv.Itoa(counter),
-					center:   newCenter,
-					size:     n.size * 0.5,
-					children: [8]*Node{},
-					point:    nil,
-					maxDepth: 0,
-					parent:   n,
-					lock:     sync.Mutex{},
+					Uid:      n.Uid + strconv.Itoa(counter),
+					Center:   newCenter,
+					Size:     n.Size * 0.5,
+					Children: [8]*Node{},
+					Point:    nil,
+					MaxDepth: 0,
+					Parent:   n,
+					Lock:     sync.Mutex{},
 				}
-				n.children[counter] = &newNode
+				n.Children[counter] = &newNode
 
 				counter++
 			}
 		}
 	}
-	n.RaiseMaxDepth(n.maxDepth + 1)
+	n.RaiseMaxDepth(n.MaxDepth + 1)
 }
 
 func (n *Node) RaiseMaxDepth(childDepth uint8) {
 
-	if childDepth+1 > n.maxDepth {
-		n.maxDepth = childDepth + 1
+	if childDepth+1 > n.MaxDepth {
+		n.MaxDepth = childDepth + 1
 
-		if n.parent != nil {
-			n.parent.RaiseMaxDepth(n.maxDepth)
+		if n.Parent != nil {
+			n.Parent.RaiseMaxDepth(n.MaxDepth)
 		}
 	}
 }
@@ -71,13 +71,13 @@ func Inside(low float32, high float32, val float32) bool {
 }
 
 func (n *Node) PointFits(point *Vector3) bool {
-	if !Inside(n.center.x-0.5*n.size, n.center.x+0.5*n.size, point.x) {
+	if !Inside(n.Center.X-0.5*n.Size, n.Center.X+0.5*n.Size, point.X) {
 		return false
 	}
-	if !Inside(n.center.y-0.5*n.size, n.center.y+0.5*n.size, point.y) {
+	if !Inside(n.Center.Y-0.5*n.Size, n.Center.Y+0.5*n.Size, point.Y) {
 		return false
 	}
-	if !Inside(n.center.z-0.5*n.size, n.center.z+0.5*n.size, point.z) {
+	if !Inside(n.Center.Z-0.5*n.Size, n.Center.Z+0.5*n.Size, point.Z) {
 		return false
 	}
 	return true

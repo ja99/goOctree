@@ -1,23 +1,23 @@
 package goOctree
 
 type Vector3 struct {
-	x float32
-	y float32
-	z float32
+	X float32
+	Y float32
+	Z float32
 }
 
 func (v Vector3) Add(v2 Vector3) Vector3 {
-	v.x += v2.x
-	v.y += v2.y
-	v.z += v2.z
+	v.X += v2.X
+	v.Y += v2.Y
+	v.Z += v2.Z
 
 	return v
 }
 
 func (v Vector3) Multiply(num float32) Vector3 {
-	v.x *= num
-	v.y *= num
-	v.z *= num
+	v.X *= num
+	v.Y *= num
+	v.Z *= num
 
 	return v
 }
