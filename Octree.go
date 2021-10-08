@@ -1,6 +1,7 @@
 package goOctree
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 )
@@ -9,11 +10,17 @@ type Octree struct {
 	Root *Node
 }
 
+var (
+	aitErr = errors.New("Point was already in tree")
+	stmErr = errors.New("Node was smaller than minSize")
+	nfsErr = errors.New("No free Space found")
+)
+
 // Insertion
-func (tree *Octree) Insert(point *Vector3) {
-	newHome := FindFreeSpace(tree.Root, point)
-	if newHome == nil {
-		fmt.Println("Point", point, "was already in the tree")
+func (tree *Octree) Insert(point *Vector3, minSize float32) {
+	newHome, err := FindFreeSpace(tree.Root, point, minSize)
+	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
@@ -22,19 +29,24 @@ func (tree *Octree) Insert(point *Vector3) {
 	//fmt.Println("Point:" , Point, " went to ", newHome.Uid)
 }
 
-func FindFreeSpace(currentNode *Node, point *Vector3) *Node {
+func FindFreeSpace(currentNode *Node, point *Vector3, minSize float32) (*Node, error) {
 	//If this is true...
 	//... Gentleman, we got him!
 	if currentNode.Point == nil && currentNode.Children[0] == nil {
 		//if currentNode.Point == nil && currentNode.MaxDepth == 0 {
-		return currentNode
+		return currentNode, nil
 	}
 
 	//Test If Point is already inside the Octree
 	if currentNode.Point != nil {
 		if *currentNode.Point == *point {
-			return nil
+			return nil, aitErr
 		}
+	}
+
+	//Test if node size is smaller than minSize
+	if currentNode.Size < minSize {
+		return nil, stmErr
 	}
 
 	//if you got til here, then we need to go further down
@@ -44,7 +56,7 @@ func FindFreeSpace(currentNode *Node, point *Vector3) *Node {
 		currentNode.MakeChildren()
 		v := currentNode.Point
 		currentNode.Point = nil
-		newHome := FindFreeSpace(currentNode, v)
+		newHome, _ := FindFreeSpace(currentNode, v, minSize)
 		newHome.Point = v
 		//fmt.Println("Point:" , v, " got moved from ", currentNode.Uid, " to ", newHome.Uid)
 	}
@@ -52,12 +64,11 @@ func FindFreeSpace(currentNode *Node, point *Vector3) *Node {
 	//Look for candidate in Children
 	for i := 0; i < 8; i++ {
 		if currentNode.Children[i].PointFits(point) {
-			return FindFreeSpace(currentNode.Children[i], point)
+			return FindFreeSpace(currentNode.Children[i], point, minSize)
 		}
 	}
 
-	fmt.Println("----------------------\n", "didnt find a free space!!!! \n----------------------")
-	return nil
+	return nil, nfsErr
 }
 
 // Point already in tree query
