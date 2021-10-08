@@ -22,9 +22,9 @@ func (tree *Octree) Insert(point *Vector3, minSize float32) {
 	if err != nil {
 		fmt.Println(err)
 		return
+	} else {
+		newHome.Point = point
 	}
-
-	newHome.Point = point
 
 	//fmt.Println("Point:" , Point, " went to ", newHome.Uid)
 }
