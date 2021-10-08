@@ -59,6 +59,8 @@ func FindFreeSpace(currentNode *Node, point *Vector3, minSize float32) (*Node, e
 		newHome, err := FindFreeSpace(currentNode, v, minSize)
 		if err != nil {
 			fmt.Println(err)
+		} else if newHome == nil {
+			fmt.Println("-------------------------------NEW HOME WAS STILL NIL----------------------")
 		} else {
 			newHome.Point = v
 		}
