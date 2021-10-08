@@ -56,8 +56,12 @@ func FindFreeSpace(currentNode *Node, point *Vector3, minSize float32) (*Node, e
 		currentNode.MakeChildren()
 		v := currentNode.Point
 		currentNode.Point = nil
-		newHome, _ := FindFreeSpace(currentNode, v, minSize)
-		newHome.Point = v
+		newHome, err := FindFreeSpace(currentNode, v, minSize)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			newHome.Point = v
+		}
 		//fmt.Println("Point:" , v, " got moved from ", currentNode.Uid, " to ", newHome.Uid)
 	}
 
