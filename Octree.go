@@ -17,10 +17,12 @@ var (
 )
 
 // Insertion
-func (tree *Octree) Insert(point *Vector3, minSize float32) {
+func (tree *Octree) Insert(point *Vector3, minSize float32, verbose bool) {
 	newHome, err := FindFreeSpace(tree.Root, point, minSize)
 	if err != nil {
-		fmt.Println(err)
+		if verbose {
+			fmt.Println(err)
+		}
 		return
 	} else {
 		newHome.Point = point
