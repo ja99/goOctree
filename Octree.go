@@ -52,8 +52,12 @@ func FindFreeSpace(currentNode *Node, point *Vector3, minSize float32) (*Node, e
 	//if you got til here, then we need to go further down
 	//But if we don't have Children then we need to make em first
 	if currentNode.Children[0] == nil {
-		// Since points are only allowed in child nodes, we will have to trickle down the Point
+		//Don`t make children if they would be too small
+		if currentNode.Size*0.5 < minSize {
+			return nil, stmErr
+		}
 		currentNode.MakeChildren()
+		// Since points are only allowed in child nodes, we will have to trickle down the Point
 		v := currentNode.Point
 		currentNode.Point = nil
 		newHome, err := FindFreeSpace(currentNode, v, minSize)
