@@ -20,21 +20,24 @@ var (
 )
 
 // Insertion
-func (tree *Octree) Insert(point *Vector3, minSize float32, verbose bool) {
-	newHome, err := FindFreeSpace(tree.Root, point, minSize)
+func (tree *Octree) Insert(point *Vector3, minSize float32, verbose bool) []*Node {
+	var createdNodes []*Node
+
+	newHome, err := FindFreeSpace(tree.Root, point, minSize, &createdNodes)
 	if err != nil {
 		if verbose {
 			fmt.Println(err)
 		}
-		return
+		return createdNodes
 	} else {
 		newHome.Point = point
 	}
+	return createdNodes
 
 	//fmt.Println("Point:" , Point, " went to ", newHome.Uid)
 }
 
-func FindFreeSpace(currentNode *Node, point *Vector3, minSize float32) (*Node, error) {
+func FindFreeSpace(currentNode *Node, point *Vector3, minSize float32, createdNodes *[]*Node) (*Node, error) {
 	//If this is true...
 	//... Gentleman, we got him!
 	if currentNode.Point == nil && currentNode.Children[0] == nil {
@@ -62,14 +65,17 @@ func FindFreeSpace(currentNode *Node, point *Vector3, minSize float32) (*Node, e
 			return nil, stmErr
 		}
 		currentNode.MakeChildren()
+		for _, child := range currentNode.Children {
+			*createdNodes = append(*createdNodes, child)
+		}
 		// Since points are only allowed in child nodes, we will have to trickle down the Point
 		v := currentNode.Point
 		currentNode.Point = nil
-		newHome, err := FindFreeSpace(currentNode, v, minSize)
+		newHome, err := FindFreeSpace(currentNode, v, minSize, createdNodes)
 		if err != nil {
 			fmt.Println(err)
 		} else if newHome == nil {
-			fmt.Println("-------------------------------NEW HOME WAS STILL NIL----------------------")
+			return nil, nhnErr
 		} else {
 			newHome.Point = v
 		}
@@ -79,7 +85,7 @@ func FindFreeSpace(currentNode *Node, point *Vector3, minSize float32) (*Node, e
 	//Look for candidate in Children
 	for i := 0; i < 8; i++ {
 		if currentNode.Children[i].PointFits(point) {
-			return FindFreeSpace(currentNode.Children[i], point, minSize)
+			return FindFreeSpace(currentNode.Children[i], point, minSize, createdNodes)
 		}
 	}
 
@@ -195,6 +201,7 @@ func GetFreeSpacesTask(currentNode *Node, ownChan *returnObjFreeSpaces, parentWg
 }
 
 // Neighbor Query (All, not just directly facing) ToDo: MakeOneOnlyForDirectlay Facing
+// ToDo: Find a better solution for the "Check points"
 func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool) []string {
 	checkPoints := []Vector3{}
 
