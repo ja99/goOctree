@@ -14,6 +14,9 @@ var (
 	aitErr = errors.New("Point was already in tree")
 	stmErr = errors.New("Node was smaller than minSize")
 	nfsErr = errors.New("No free Space found")
+	nhnErr = errors.New("NEW HOME WAS STILL NIL")
+	nffErr = errors.New("DID NOT FIND A FITTING CHILD")
+	nfnErr = errors.New("DID NOT FIND A FITTING NODE")
 )
 
 // Insertion
@@ -246,7 +249,12 @@ func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool) []string 
 
 	for _, point := range checkPoints {
 		if rootNode.PointFits(&point) {
-			n := FindFittingChild(rootNode, &point, len(currentNode.Uid))
+			n, err := FindFittingChild(rootNode, &point, len(currentNode.Uid))
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+
 			addition := GetChildrenRecursively(n, hasToBeFree)
 			for _, val := range addition {
 				returnSlice = append(returnSlice, val)
@@ -257,13 +265,13 @@ func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool) []string 
 
 }
 
-func FindFittingChild(currentNode *Node, point *Vector3, depth int) *Node {
+func FindFittingChild(currentNode *Node, point *Vector3, depth int) (*Node, error) {
 	if len(currentNode.Uid) == depth {
-		return currentNode
+		return currentNode, nil
 	}
 
 	if currentNode.Children[0] == nil {
-		return currentNode
+		return currentNode, nil
 	}
 
 	for _, child := range currentNode.Children {
@@ -272,8 +280,7 @@ func FindFittingChild(currentNode *Node, point *Vector3, depth int) *Node {
 		}
 	}
 
-	fmt.Println("----------------------------- DID NOT FIND A FITTING CHILD -----------------------------------")
-	return nil
+	return nil, nffErr
 }
 
 func GetChildrenRecursively(currentNode *Node, hasToBeFree bool) []string {
@@ -300,11 +307,11 @@ func GetChildrenRecursivelyTask(currentNode *Node, returnSlice *[]string, hasToB
 }
 
 // GetNodeWithUid
-func (tree *Octree) GetNodeWithUid(uid string) *Node {
+func (tree *Octree) GetNodeWithUid(uid string) (*Node, error) {
 	currentNode := tree.Root
 	for true {
 		if currentNode.Uid == uid {
-			return currentNode
+			return currentNode, nil
 		}
 		if len(currentNode.Uid) < len(uid) {
 			for _, child := range currentNode.Children {
@@ -314,9 +321,8 @@ func (tree *Octree) GetNodeWithUid(uid string) *Node {
 				}
 			}
 		} else {
-			fmt.Println("----------------------------- DID NOT FIND A FITTING NODE -----------------------------------")
-			return nil
+			return nil, nfnErr
 		}
 	}
-	return nil
+	return nil, nfnErr
 }
