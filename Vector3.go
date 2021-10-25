@@ -1,5 +1,7 @@
 package goOctree
 
+import "math"
+
 type Vector3 struct {
 	X float32
 	Y float32
@@ -20,4 +22,9 @@ func (v Vector3) Multiply(num float32) Vector3 {
 	v.Z *= num
 
 	return v
+}
+
+func Distance(a, b Vector3) float32 {
+	dist := math.Sqrt(math.Pow(float64(a.X-b.X), 2) + math.Pow(float64(a.Y-b.Y), 2) + math.Pow(float64(a.Z-b.Z), 2))
+	return float32(dist)
 }
