@@ -203,6 +203,7 @@ func GetFreeSpacesTask(currentNode *Node, ownChan *returnObjFreeSpaces, parentWg
 // Neighbor Query (All, not just directly facing)
 //ToDo: MakeOnlyForDirectlayFacing option
 // ToDo: Find a better solution for the "Check points"
+// ToDo: Return NodePointers instead of Ids
 func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool) []string {
 	checkPoints := []Vector3{}
 
@@ -311,7 +312,7 @@ func GetChildrenRecursivelyTask(currentNode *Node, returnSlice *[]string, hasToB
 }
 
 func GetNodeWithUid(root *Node, uid string) (*Node, error) {
-	currentNode := tree.Root
+	currentNode := root
 	for true {
 		if currentNode.Uid == uid {
 			return currentNode, nil
