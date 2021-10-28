@@ -58,7 +58,7 @@ func FindFreeSpace(currentNode *Node, point *Vector3, minSize float32, createdNo
 	}
 
 	//if you got til here, then we need to go further down
-	//But if we don't have Children then we need to make em first
+	//But if we don't have Children then we need to make them first
 	if currentNode.Children[0] == nil {
 		//Don`t make children if they would be too small
 		if currentNode.Size*0.5 < minSize {
@@ -200,7 +200,8 @@ func GetFreeSpacesTask(currentNode *Node, ownChan *returnObjFreeSpaces, parentWg
 
 }
 
-// Neighbor Query (All, not just directly facing) ToDo: MakeOneOnlyForDirectlay Facing
+// Neighbor Query (All, not just directly facing)
+//ToDo: MakeOnlyForDirectlayFacing option
 // ToDo: Find a better solution for the "Check points"
 func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool) []string {
 	checkPoints := []Vector3{}
@@ -249,7 +250,6 @@ func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool) []string 
 		Y: 0,
 		Z: currentNode.Size*0.5 + 0.0001,
 	})
-
 	checkPoints = append(checkPoints, front)
 
 	var returnSlice []string
@@ -263,9 +263,7 @@ func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool) []string 
 			}
 
 			addition := GetChildrenRecursively(n, hasToBeFree)
-			for _, val := range addition {
-				returnSlice = append(returnSlice, val)
-			}
+			returnSlice = append(returnSlice, addition...)
 		}
 	}
 	return returnSlice
@@ -297,7 +295,6 @@ func GetChildrenRecursively(currentNode *Node, hasToBeFree bool) []string {
 }
 
 func GetChildrenRecursivelyTask(currentNode *Node, returnSlice *[]string, hasToBeFree bool) {
-
 	if currentNode.Children[0] != nil {
 		for i := 0; i < 8; i++ {
 			GetChildrenRecursivelyTask(currentNode.Children[i], returnSlice, hasToBeFree)
@@ -313,7 +310,6 @@ func GetChildrenRecursivelyTask(currentNode *Node, returnSlice *[]string, hasToB
 	}
 }
 
-// GetNodeWithUid
 func (tree *Octree) GetNodeWithUid(uid string) (*Node, error) {
 	currentNode := tree.Root
 	for true {
