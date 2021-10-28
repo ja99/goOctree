@@ -2,7 +2,6 @@ package goOctree
 
 import (
 	"strconv"
-	"sync"
 )
 
 type Node struct {
@@ -21,7 +20,6 @@ type Node struct {
 	Point    *Vector3
 	MaxDepth uint8
 	Parent   *Node
-	Lock     sync.Mutex
 }
 
 func (n *Node) MakeChildren() {
@@ -44,7 +42,6 @@ func (n *Node) MakeChildren() {
 					Point:    nil,
 					MaxDepth: 0,
 					Parent:   n,
-					Lock:     sync.Mutex{},
 				}
 				n.Children[counter] = &newNode
 
