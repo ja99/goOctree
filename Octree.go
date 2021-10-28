@@ -310,7 +310,7 @@ func GetChildrenRecursivelyTask(currentNode *Node, returnSlice *[]string, hasToB
 	}
 }
 
-func (tree *Octree) GetNodeWithUid(uid string) (*Node, error) {
+func GetNodeWithUid(root *Node, uid string) (*Node, error) {
 	currentNode := tree.Root
 	for true {
 		if currentNode.Uid == uid {
