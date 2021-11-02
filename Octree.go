@@ -201,10 +201,10 @@ func GetFreeSpacesTask(currentNode *Node, ownChan *returnObjFreeSpaces, parentWg
 }
 
 // Neighbor Query (All, not just directly facing)
-//ToDo: MakeOnlyForDirectlayFacing option
+//ToDo: MakeOnlyForDirectlayFacing option --Done
 // ToDo: Find a better solution for the "Check points" -- still very verbose but better...
 // ToDo: Return NodePointers instead of Ids -- Done
-func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool) []*Node {
+func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool, onlyDirectNeighbours bool) []*Node {
 	checkPoints := []Vector3{}
 
 	for axis := 0; axis < 3; axis++ {
@@ -239,7 +239,7 @@ func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool) []*Node {
 
 	for _, point := range checkPoints {
 		if rootNode.PointFits(&point) {
-			n, err := FindFittingChild(rootNode, &point, len(currentNode.Uid))
+			n, err := FindFittingChild(rootNode, &point, len(currentNode.Uid), onlyDirectNeighbours)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -253,8 +253,8 @@ func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool) []*Node {
 
 }
 
-func FindFittingChild(currentNode *Node, point *Vector3, depth int) (*Node, error) {
-	if len(currentNode.Uid) == depth {
+func FindFittingChild(currentNode *Node, point *Vector3, depth int, asLowAsPossible bool) (*Node, error) {
+	if len(currentNode.Uid) == depth && !asLowAsPossible {
 		return currentNode, nil
 	}
 
@@ -264,7 +264,7 @@ func FindFittingChild(currentNode *Node, point *Vector3, depth int) (*Node, erro
 
 	for _, child := range currentNode.Children {
 		if child.PointFits(point) {
-			return FindFittingChild(child, point, depth)
+			return FindFittingChild(child, point, depth, asLowAsPossible)
 		}
 	}
 
