@@ -202,56 +202,38 @@ func GetFreeSpacesTask(currentNode *Node, ownChan *returnObjFreeSpaces, parentWg
 
 // Neighbor Query (All, not just directly facing)
 //ToDo: MakeOnlyForDirectlayFacing option
-// ToDo: Find a better solution for the "Check points"
+// ToDo: Find a better solution for the "Check points" -- still very verbose but better...
 // ToDo: Return NodePointers instead of Ids -- Done
 func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool) []*Node {
 	checkPoints := []Vector3{}
 
-	left := currentNode.Center.Add(Vector3{
-		X: -currentNode.Size*0.5 - 0.0001,
-		Y: 0,
-		Z: 0,
-	})
-	checkPoints = append(checkPoints, left)
-
-	right := currentNode.Center.Add(Vector3{
-		X: currentNode.Size*0.5 + 0.0001,
-		Y: 0,
-		Z: 0,
-	})
-
-	checkPoints = append(checkPoints, right)
-
-	bottom := currentNode.Center.Add(Vector3{
-		X: 0,
-		Y: -currentNode.Size*0.5 - 0.0001,
-		Z: 0,
-	})
-
-	checkPoints = append(checkPoints, bottom)
-
-	top := currentNode.Center.Add(Vector3{
-		X: 0,
-		Y: currentNode.Size*0.5 + 0.0001,
-		Z: 0,
-	})
-
-	checkPoints = append(checkPoints, top)
-
-	back := currentNode.Center.Add(Vector3{
-		X: 0,
-		Y: 0,
-		Z: -currentNode.Size*0.5 - 0.0001,
-	})
-
-	checkPoints = append(checkPoints, back)
-
-	front := currentNode.Center.Add(Vector3{
-		X: 0,
-		Y: 0,
-		Z: currentNode.Size*0.5 + 0.0001,
-	})
-	checkPoints = append(checkPoints, front)
+	for axis := 0; axis < 3; axis++ {
+		for plusOrMinus := float32(-1); plusOrMinus < 2; plusOrMinus += 2 {
+			p := Vector3{}
+			if axis == 0 {
+				p = currentNode.Center.Add(Vector3{
+					X: plusOrMinus*currentNode.Size*0.5 + plusOrMinus*0.0001,
+					Y: 0,
+					Z: 0,
+				})
+			}
+			if axis == 1 {
+				p = currentNode.Center.Add(Vector3{
+					X: 0,
+					Y: plusOrMinus*currentNode.Size*0.5 + plusOrMinus*0.0001,
+					Z: 0,
+				})
+			}
+			if axis == 2 {
+				p = currentNode.Center.Add(Vector3{
+					X: 0,
+					Y: 0,
+					Z: plusOrMinus*currentNode.Size*0.5 + plusOrMinus*0.0001,
+				})
+			}
+			checkPoints = append(checkPoints, p)
+		}
+	}
 
 	var returnSlice []*Node
 
