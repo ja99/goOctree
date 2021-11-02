@@ -203,8 +203,8 @@ func GetFreeSpacesTask(currentNode *Node, ownChan *returnObjFreeSpaces, parentWg
 // Neighbor Query (All, not just directly facing)
 //ToDo: MakeOnlyForDirectlayFacing option
 // ToDo: Find a better solution for the "Check points"
-// ToDo: Return NodePointers instead of Ids
-func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool) []string {
+// ToDo: Return NodePointers instead of Ids -- Done
+func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool) []*Node {
 	checkPoints := []Vector3{}
 
 	left := currentNode.Center.Add(Vector3{
@@ -253,7 +253,7 @@ func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool) []string 
 	})
 	checkPoints = append(checkPoints, front)
 
-	var returnSlice []string
+	var returnSlice []*Node
 
 	for _, point := range checkPoints {
 		if rootNode.PointFits(&point) {
@@ -289,13 +289,13 @@ func FindFittingChild(currentNode *Node, point *Vector3, depth int) (*Node, erro
 	return nil, nffErr
 }
 
-func GetChildrenRecursively(currentNode *Node, hasToBeFree bool) []string {
-	var returnSlice []string
+func GetChildrenRecursively(currentNode *Node, hasToBeFree bool) []*Node {
+	var returnSlice []*Node
 	GetChildrenRecursivelyTask(currentNode, &returnSlice, hasToBeFree)
 	return returnSlice
 }
 
-func GetChildrenRecursivelyTask(currentNode *Node, returnSlice *[]string, hasToBeFree bool) {
+func GetChildrenRecursivelyTask(currentNode *Node, returnSlice *[]*Node, hasToBeFree bool) {
 	if currentNode.Children[0] != nil {
 		for i := 0; i < 8; i++ {
 			GetChildrenRecursivelyTask(currentNode.Children[i], returnSlice, hasToBeFree)
@@ -307,7 +307,7 @@ func GetChildrenRecursivelyTask(currentNode *Node, returnSlice *[]string, hasToB
 			}
 		}
 
-		*returnSlice = append(*returnSlice, currentNode.Uid)
+		*returnSlice = append(*returnSlice, currentNode)
 	}
 }
 
