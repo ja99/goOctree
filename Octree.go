@@ -3,6 +3,7 @@ package goOctree
 import (
 	"errors"
 	"fmt"
+	"math"
 	"sync"
 )
 
@@ -90,6 +91,189 @@ func FindFreeSpace(currentNode *Node, point *Vector3, minSize float32, createdNo
 	}
 
 	return nil, nfsErr
+}
+
+type Direction int
+
+const (
+	xMinus Direction = iota
+	xPlus            //1
+	yMinus           //2
+	YPlus            //3
+	zMinus           //4
+	zPlus            //5
+	all              //6
+)
+
+type CheckPoint struct {
+	Point Vector3
+	Dir   Direction
+}
+
+// Neighbor Query (All, not just directly facing)
+//ToDo: MakeOnlyForDirectlayFacing option -- Now actually Done
+// ToDo: Find a better solution for the "Check points" -- still very verbose but better...
+// ToDo: Return NodePointers instead of Ids -- Done
+func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool, onlyDirectNeighbours bool) []*Node {
+	// Make Points in each direction to find the neighbours
+	checkPoints := []*CheckPoint{}
+	for axis := 0; axis < 3; axis++ {
+		for plusOrMinus := float32(-1); plusOrMinus < 2; plusOrMinus += 2 {
+			p := Vector3{}
+			var dir Direction
+			if axis == 0 {
+				p = currentNode.Center.Add(Vector3{
+					X: plusOrMinus*currentNode.Size*0.5 + plusOrMinus*0.0001,
+					Y: 0,
+					Z: 0,
+				})
+			}
+			if axis == 1 {
+				p = currentNode.Center.Add(Vector3{
+					X: 0,
+					Y: plusOrMinus*currentNode.Size*0.5 + plusOrMinus*0.0001,
+					Z: 0,
+				})
+			}
+			if axis == 2 {
+				p = currentNode.Center.Add(Vector3{
+					X: 0,
+					Y: 0,
+					Z: plusOrMinus*currentNode.Size*0.5 + plusOrMinus*0.0001,
+				})
+			}
+			if onlyDirectNeighbours {
+				dir = Direction(axis*2 + int(math.Max(0, float64(-plusOrMinus))))
+			} else {
+				dir = all
+			}
+
+			checkPoint := CheckPoint{
+				Point: p,
+				Dir:   dir,
+			}
+			checkPoints = append(checkPoints, &checkPoint)
+		}
+	}
+
+	var returnSlice []*Node
+	for _, checkPoint := range checkPoints {
+		if rootNode.PointFits(&checkPoint.Point) {
+			n, err := FindFittingChild(rootNode, &checkPoint.Point, len(currentNode.Uid))
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+
+			addition := []*Node{}
+
+			if n.Children[0] == nil {
+				addition = append(addition, n)
+			} else {
+				addition = GetChildrenRecursively(n, hasToBeFree, checkPoint.Dir)
+			}
+			returnSlice = append(returnSlice, addition...)
+		}
+	}
+	return returnSlice
+
+}
+
+func FindFittingChild(currentNode *Node, point *Vector3, depth int) (*Node, error) {
+	if len(currentNode.Uid) == depth {
+		return currentNode, nil
+
+	}
+
+	if currentNode.Children[0] == nil {
+		return currentNode, nil
+	}
+
+	for _, child := range currentNode.Children {
+		if child.PointFits(point) {
+			return FindFittingChild(child, point, depth)
+		}
+	}
+
+	return nil, nffErr
+}
+
+func GetChildrenRecursively(currentNode *Node, hasToBeFree bool, side Direction) []*Node {
+	var returnSlice []*Node
+	GetChildrenRecursivelyTask(currentNode, &returnSlice, hasToBeFree, side)
+	return returnSlice
+}
+
+func GetChildrenRecursivelyTask(currentNode *Node, returnSlice *[]*Node, hasToBeFree bool, side Direction) {
+	if currentNode.Children[0] != nil {
+		if side == xMinus {
+			for i := 0; i < 5; i++ {
+				GetChildrenRecursivelyTask(currentNode.Children[i], returnSlice, hasToBeFree, side)
+			}
+		} else if side == xPlus {
+			for i := 4; i < 8; i++ {
+				GetChildrenRecursivelyTask(currentNode.Children[i], returnSlice, hasToBeFree, side)
+			}
+		} else if side == yMinus {
+			for i := 0; i < 2; i++ {
+				GetChildrenRecursivelyTask(currentNode.Children[i], returnSlice, hasToBeFree, side)
+			}
+			for i := 4; i < 6; i++ {
+				GetChildrenRecursivelyTask(currentNode.Children[i], returnSlice, hasToBeFree, side)
+			}
+		} else if side == YPlus {
+			for i := 2; i < 4; i++ {
+				GetChildrenRecursivelyTask(currentNode.Children[i], returnSlice, hasToBeFree, side)
+			}
+			for i := 6; i < 8; i++ {
+				GetChildrenRecursivelyTask(currentNode.Children[i], returnSlice, hasToBeFree, side)
+			}
+		} else if side == zMinus {
+			for i := 0; i < 8; i += 2 {
+				GetChildrenRecursivelyTask(currentNode.Children[i], returnSlice, hasToBeFree, side)
+			}
+		} else if side == zPlus {
+			for i := 1; i < 8; i += 2 {
+				GetChildrenRecursivelyTask(currentNode.Children[i], returnSlice, hasToBeFree, side)
+			}
+		} else if side == all {
+			for i := 0; i < 8; i++ {
+				GetChildrenRecursivelyTask(currentNode.Children[i], returnSlice, hasToBeFree, side)
+			}
+		} else {
+			fmt.Println("ENUM DIRECTION OUTSIDE RANGE")
+		}
+
+	} else {
+		if hasToBeFree {
+			if currentNode.Point != nil {
+				return
+			}
+		}
+
+		*returnSlice = append(*returnSlice, currentNode)
+	}
+}
+
+// ---------------------------------------------Unused Queries--------------------------------------------------------
+func GetNodeWithUid(root *Node, uid string) (*Node, error) {
+	currentNode := root
+	for true {
+		if currentNode.Uid == uid {
+			return currentNode, nil
+		}
+		if len(currentNode.Uid) < len(uid) {
+			for _, child := range currentNode.Children {
+				if child.Uid == uid {
+					currentNode = child
+					break
+				}
+			}
+		} else {
+			return nil, nfnErr
+		}
+	}
+	return nil, nfnErr
 }
 
 // Point already in tree query
@@ -198,117 +382,4 @@ func GetFreeSpacesTask(currentNode *Node, ownChan *returnObjFreeSpaces, parentWg
 		ownChan.lock.Unlock()
 	}
 
-}
-
-// Neighbor Query (All, not just directly facing)
-//ToDo: MakeOnlyForDirectlayFacing option --Done
-// ToDo: Find a better solution for the "Check points" -- still very verbose but better...
-// ToDo: Return NodePointers instead of Ids -- Done
-func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool, onlyDirectNeighbours bool) []*Node {
-	checkPoints := []Vector3{}
-
-	for axis := 0; axis < 3; axis++ {
-		for plusOrMinus := float32(-1); plusOrMinus < 2; plusOrMinus += 2 {
-			p := Vector3{}
-			if axis == 0 {
-				p = currentNode.Center.Add(Vector3{
-					X: plusOrMinus*currentNode.Size*0.5 + plusOrMinus*0.0001,
-					Y: 0,
-					Z: 0,
-				})
-			}
-			if axis == 1 {
-				p = currentNode.Center.Add(Vector3{
-					X: 0,
-					Y: plusOrMinus*currentNode.Size*0.5 + plusOrMinus*0.0001,
-					Z: 0,
-				})
-			}
-			if axis == 2 {
-				p = currentNode.Center.Add(Vector3{
-					X: 0,
-					Y: 0,
-					Z: plusOrMinus*currentNode.Size*0.5 + plusOrMinus*0.0001,
-				})
-			}
-			checkPoints = append(checkPoints, p)
-		}
-	}
-
-	var returnSlice []*Node
-
-	for _, point := range checkPoints {
-		if rootNode.PointFits(&point) {
-			n, err := FindFittingChild(rootNode, &point, len(currentNode.Uid), onlyDirectNeighbours)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-
-			addition := GetChildrenRecursively(n, hasToBeFree)
-			returnSlice = append(returnSlice, addition...)
-		}
-	}
-	return returnSlice
-
-}
-
-func FindFittingChild(currentNode *Node, point *Vector3, depth int, asLowAsPossible bool) (*Node, error) {
-	if len(currentNode.Uid) == depth && !asLowAsPossible {
-		return currentNode, nil
-	}
-
-	if currentNode.Children[0] == nil {
-		return currentNode, nil
-	}
-
-	for _, child := range currentNode.Children {
-		if child.PointFits(point) {
-			return FindFittingChild(child, point, depth, asLowAsPossible)
-		}
-	}
-
-	return nil, nffErr
-}
-
-func GetChildrenRecursively(currentNode *Node, hasToBeFree bool) []*Node {
-	var returnSlice []*Node
-	GetChildrenRecursivelyTask(currentNode, &returnSlice, hasToBeFree)
-	return returnSlice
-}
-
-func GetChildrenRecursivelyTask(currentNode *Node, returnSlice *[]*Node, hasToBeFree bool) {
-	if currentNode.Children[0] != nil {
-		for i := 0; i < 8; i++ {
-			GetChildrenRecursivelyTask(currentNode.Children[i], returnSlice, hasToBeFree)
-		}
-	} else {
-		if hasToBeFree {
-			if currentNode.Point != nil {
-				return
-			}
-		}
-
-		*returnSlice = append(*returnSlice, currentNode)
-	}
-}
-
-func GetNodeWithUid(root *Node, uid string) (*Node, error) {
-	currentNode := root
-	for true {
-		if currentNode.Uid == uid {
-			return currentNode, nil
-		}
-		if len(currentNode.Uid) < len(uid) {
-			for _, child := range currentNode.Children {
-				if child.Uid == uid {
-					currentNode = child
-					break
-				}
-			}
-		} else {
-			return nil, nfnErr
-		}
-	}
-	return nil, nfnErr
 }
