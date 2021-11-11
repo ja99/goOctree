@@ -79,3 +79,28 @@ func (n *Node) PointFits(point *Vector3) bool {
 	}
 	return true
 }
+
+func (n *Node) HasChildren() bool {
+	return n.Children[0] == nil
+}
+
+func (n *Node) HasFreeChild() bool {
+	if !n.HasChildren() {
+		if n.Point == nil {
+			return true
+		} else {
+			return false
+		}
+	} else {
+		for _, child := range n.Children {
+			if child.HasFreeChild() {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (n *Node) IsFree() bool {
+	return !n.HasChildren() && n.Point == nil
+}

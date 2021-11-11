@@ -205,7 +205,7 @@ func GetChildrenRecursively(currentNode *Node, hasToBeFree bool, side Direction)
 }
 
 func GetChildrenRecursivelyTask(currentNode *Node, returnSlice *[]*Node, hasToBeFree bool, side Direction) {
-	if currentNode.Children[0] != nil {
+	if currentNode.HasChildren() {
 		if side == xMinus {
 			for i := 0; i < 5; i++ {
 				GetChildrenRecursivelyTask(currentNode.Children[i], returnSlice, hasToBeFree, side)
@@ -329,7 +329,7 @@ func GetPointsTask(currentNode *Node, ownchan *returnObjPoints, parentWg *sync.W
 	defer parentWg.Done()
 	//defer println(currentNode.Uid, "done")
 	//fmt.Println("Uid", currentNode.Uid, "wg: ", parentWg)
-	if currentNode.Children[0] != nil {
+	if currentNode.HasChildren() {
 		parentWg.Add(8)
 		for _, child := range currentNode.Children {
 			go GetPointsTask(child, ownchan, parentWg)
@@ -370,7 +370,7 @@ func GetFreeSpacesTask(currentNode *Node, ownChan *returnObjFreeSpaces, parentWg
 	defer parentWg.Done()
 	//defer println(currentNode.Uid, "done")
 	//fmt.Println("Uid", currentNode.Uid, "wg: ", parentWg)
-	if currentNode.Children[0] != nil {
+	if currentNode.HasChildren() {
 		parentWg.Add(8)
 		for _, child := range currentNode.Children {
 			go GetFreeSpacesTask(child, ownChan, parentWg)
