@@ -63,7 +63,7 @@ func (n *Node) RaiseMaxDepth(childDepth uint8) {
 	}
 }
 
-func Inside(low float32, high float32, val float32) bool {
+func inside(low float32, high float32, val float32) bool {
 	return (low <= val) && (val <= high)
 }
 
