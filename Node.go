@@ -68,13 +68,13 @@ func inside(low float32, high float32, val float32) bool {
 }
 
 func (n *Node) PointFits(point *Vector3) bool {
-	if !Inside(n.Center.X-0.5*n.Size, n.Center.X+0.5*n.Size, point.X) {
+	if !inside(n.Center.X-0.5*n.Size, n.Center.X+0.5*n.Size, point.X) {
 		return false
 	}
-	if !Inside(n.Center.Y-0.5*n.Size, n.Center.Y+0.5*n.Size, point.Y) {
+	if !inside(n.Center.Y-0.5*n.Size, n.Center.Y+0.5*n.Size, point.Y) {
 		return false
 	}
-	if !Inside(n.Center.Z-0.5*n.Size, n.Center.Z+0.5*n.Size, point.Z) {
+	if !inside(n.Center.Z-0.5*n.Size, n.Center.Z+0.5*n.Size, point.Z) {
 		return false
 	}
 	return true
