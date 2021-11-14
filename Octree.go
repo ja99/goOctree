@@ -34,14 +34,11 @@ func (tree *Octree) Insert(point *Vector3, minSize float32, verbose bool) []*Nod
 		newHome.Point = point
 	}
 	return createdNodes
-
-	//fmt.Println("Point:" , Point, " went to ", newHome.Uid)
 }
 
 func FindFreeSpace(currentNode *Node, point *Vector3, minSize float32, createdNodes *[]*Node) (*Node, error) {
-	//If this is true...
-	//... Gentleman, we got him!
-	if currentNode.Point == nil && currentNode.Children[0] == nil {
+	//If this is true, we have found the fitting node
+	if currentNode.IsFree() {
 		//if currentNode.Point == nil && currentNode.MaxDepth == 0 {
 		return currentNode, nil
 	}
@@ -66,6 +63,7 @@ func FindFreeSpace(currentNode *Node, point *Vector3, minSize float32, createdNo
 			return nil, stmErr
 		}
 		currentNode.MakeChildren()
+		//Add Children to list of newly crated Nodes
 		for _, child := range currentNode.Children {
 			*createdNodes = append(*createdNodes, child)
 		}
@@ -80,7 +78,6 @@ func FindFreeSpace(currentNode *Node, point *Vector3, minSize float32, createdNo
 		} else {
 			newHome.Point = v
 		}
-		//fmt.Println("Point:" , v, " got moved from ", currentNode.Uid, " to ", newHome.Uid)
 	}
 
 	//Look for candidate in Children
@@ -93,27 +90,26 @@ func FindFreeSpace(currentNode *Node, point *Vector3, minSize float32, createdNo
 	return nil, nfsErr
 }
 
+//Enum for CheckPoint
 type Direction int
 
 const (
 	xMinus Direction = iota
 	xPlus            //1
 	yMinus           //2
-	YPlus            //3
+	yPlus            //3
 	zMinus           //4
 	zPlus            //5
 	all              //6
 )
 
+// Points which should identify neighbours
 type CheckPoint struct {
 	Point Vector3
 	Dir   Direction
 }
 
-// Neighbor Query (All, not just directly facing)
-//ToDo: MakeOnlyForDirectlayFacing option -- Now actually Done
-// ToDo: Find a better solution for the "Check points" -- still very verbose but better...
-// ToDo: Return NodePointers instead of Ids -- Done
+// Neighbor Query
 func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool, onlyDirectNeighbours bool) []*Node {
 	// Make Points in each direction to find the neighbours
 	checkPoints := []*CheckPoint{}
@@ -165,7 +161,7 @@ func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool, onlyDirec
 				continue
 			}
 
-			addition := []*Node{}
+			var addition []*Node
 
 			if n.Children[0] == nil {
 				addition = append(addition, n)
@@ -221,7 +217,7 @@ func GetChildrenRecursivelyTask(currentNode *Node, returnSlice *[]*Node, hasToBe
 			for i := 4; i < 6; i++ {
 				GetChildrenRecursivelyTask(currentNode.Children[i], returnSlice, hasToBeFree, side)
 			}
-		} else if side == YPlus {
+		} else if side == yPlus {
 			for i := 2; i < 4; i++ {
 				GetChildrenRecursivelyTask(currentNode.Children[i], returnSlice, hasToBeFree, side)
 			}
