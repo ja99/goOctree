@@ -6,7 +6,7 @@ import (
 
 type Node struct {
 	Uid    string
-	Center Vector3
+	Center *Vector3
 	Size   float32
 	// [0] = -X -Y -Z //left low back
 	// [1] = -X -Y +Z //left low front
@@ -27,7 +27,7 @@ func (n *Node) MakeChildren() {
 	for x := float32(-1); x <= 1; x += 2 {
 		for y := float32(-1); y <= 1; y += 2 {
 			for z := float32(-1); z <= 1; z += 2 {
-				nudge := Vector3{
+				nudge := &Vector3{
 					X: n.Size * 0.25 * x,
 					Y: n.Size * 0.25 * y,
 					Z: n.Size * 0.25 * z,

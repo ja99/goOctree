@@ -105,7 +105,7 @@ const (
 
 // Points which should identify neighbours
 type CheckPoint struct {
-	Point Vector3
+	Point *Vector3
 	Dir   Direction
 }
 
@@ -115,24 +115,24 @@ func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool, onlyDirec
 	checkPoints := []*CheckPoint{}
 	for axis := 0; axis < 3; axis++ {
 		for plusOrMinus := float32(-1); plusOrMinus < 2; plusOrMinus += 2 {
-			p := Vector3{}
+			p := &Vector3{}
 			var dir Direction
 			if axis == 0 {
-				p = currentNode.Center.Add(Vector3{
+				p = currentNode.Center.Add(&Vector3{
 					X: plusOrMinus*currentNode.Size*0.5 + plusOrMinus*0.0001,
 					Y: 0,
 					Z: 0,
 				})
 			}
 			if axis == 1 {
-				p = currentNode.Center.Add(Vector3{
+				p = currentNode.Center.Add(&Vector3{
 					X: 0,
 					Y: plusOrMinus*currentNode.Size*0.5 + plusOrMinus*0.0001,
 					Z: 0,
 				})
 			}
 			if axis == 2 {
-				p = currentNode.Center.Add(Vector3{
+				p = currentNode.Center.Add(&Vector3{
 					X: 0,
 					Y: 0,
 					Z: plusOrMinus*currentNode.Size*0.5 + plusOrMinus*0.0001,
@@ -154,8 +154,8 @@ func GetNeighbors(currentNode *Node, rootNode *Node, hasToBeFree bool, onlyDirec
 
 	var returnSlice []*Node
 	for _, checkPoint := range checkPoints {
-		if rootNode.PointFits(&checkPoint.Point) {
-			n, err := FindFittingChild(rootNode, &checkPoint.Point, len(currentNode.Uid))
+		if rootNode.PointFits(checkPoint.Point) {
+			n, err := FindFittingChild(rootNode, checkPoint.Point, len(currentNode.Uid))
 			if err != nil {
 				fmt.Println(err)
 				continue
